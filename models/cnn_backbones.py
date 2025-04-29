@@ -7,30 +7,26 @@ class Small3DCNN(nn.Module):
     def __init__(self, num_classes=3):
         super(Small3DCNN, self).__init__()
         
-        # First Block: Convolutional Layers with reduced filters
-        self.conv1 = nn.Conv3d(1, 16, kernel_size=3, padding=1)  # in_channels, out_channels
+        self.conv1 = nn.Conv3d(1, 16, kernel_size=3, padding=1)
         self.pool1 = nn.MaxPool3d(2)
-        self.bn1 = nn.BatchNorm3d(16)  # Batch Normalization
+        self.bn1 = nn.BatchNorm3d(16)
         
-        # Second Block: Convolutional Layers with reduced filters
         self.conv2 = nn.Conv3d(16, 32, kernel_size=3, padding=1)
         self.pool2 = nn.MaxPool3d(2)
-        self.bn2 = nn.BatchNorm3d(32)  # Batch Normalization
+        self.bn2 = nn.BatchNorm3d(32)
         
-        # Third Block: Convolutional Layers with reduced filters
         self.conv3 = nn.Conv3d(32, 64, kernel_size=3, padding=1)
         self.pool3 = nn.MaxPool3d(2)
-        self.bn3 = nn.BatchNorm3d(64)  # Batch Normalization
+        self.bn3 = nn.BatchNorm3d(64)
         
-        # Fully Connected Layers
-        self.fc1 = nn.Linear(1032192, 128)  # Adjusted input size for fc1
+        self.flattened_size = None  # Will compute this dynamically
+        self.fc1 = None  # Placeholder
         self.fc2 = nn.Linear(128, num_classes)
 
     def forward(self, x):
-        if x.ndim == 4:  # [B, D, H, W]
-            x = x.unsqueeze(1)  # Add channel dimension: [B, 1, D, H, W]
-
-        # Forward pass through the convolutional blocks with ReLU and Batch Normalization
+        if x.ndim == 4:
+            x = x.unsqueeze(1)
+        
         x = F.relu(self.bn1(self.conv1(x)))
         x = self.pool1(x)
 
@@ -38,14 +34,17 @@ class Small3DCNN(nn.Module):
         x = self.pool2(x)
 
         x = F.relu(self.bn3(self.conv3(x)))
-        x = self.pool3(x)  # Now with (B, 64, D', H', W')
+        x = self.pool3(x)
 
-        # Flatten to feed into fully connected layers
-        x = x.view(x.size(0), -1)  # Flatten to [B, 64 * D' * H' * W']
+        x = x.view(x.size(0), -1)
 
-        # Fully connected layers
+        # Dynamically create fc1 on the first forward pass
+        if self.fc1 is None:
+            self.flattened_size = x.size(1)
+            self.fc1 = nn.Linear(self.flattened_size, 128).to(x.device)
+
         x = F.relu(self.fc1(x))
-        out = self.fc2(x)  # Output layer: [B, num_classes]
+        out = self.fc2(x)
 
         return out
 

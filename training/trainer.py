@@ -36,9 +36,9 @@ def train_model(model, train_loader, val_loader, criterion, optimizer, num_epoch
         total_train = 0
         
         # Training loop
-        for inputs, labels in tqdm(train_loader, desc=f"Epoch {epoch+1}/{num_epochs} (Training)"):
-            inputs, labels = inputs['image'], labels['label']
-            inputs, labels = inputs.to(device), labels.to(device)
+        for batch in tqdm(train_loader, desc=f"Epoch {epoch+1}/{num_epochs} (Training)"):
+            inputs = batch['image'].to(device)
+            labels = batch['label'].to(device)
 
             optimizer.zero_grad()  # Zero the gradients
             outputs = model(inputs)
@@ -64,9 +64,9 @@ def train_model(model, train_loader, val_loader, criterion, optimizer, num_epoch
         total_val = 0
         
         with torch.no_grad():  # No need to calculate gradients for validation
-            for inputs, labels in tqdm(val_loader, desc=f"Epoch {epoch+1}/{num_epochs} (Validation)"):
-                inputs, labels = inputs['image'], labels['label']
-                inputs, labels = inputs.to(device), labels.to(device)
+            for batch in tqdm(val_loader, desc=f"Epoch {epoch+1}/{num_epochs} (Validation)"):
+                inputs = batch['image'].to(device)
+                labels = batch['label'].to(device)
                 outputs = model(inputs)
                 loss = criterion(outputs, labels)
                 
@@ -119,3 +119,58 @@ def load_model(model, load_path):
     model.eval()  # Set the model to evaluation mode
     print(f"Model loaded from {load_path}")
     return model
+
+
+def test_model(model, test_loader, criterion, device=None):
+    """
+    Evaluate the trained model on a test set.
+
+    Args:
+    - model: The trained model to evaluate.
+    - test_loader: DataLoader for test data.
+    - criterion: Loss function (e.g., CrossEntropyLoss).
+    - device: Device to evaluate the model on (either 'cuda' or 'cpu'). If None, it auto-selects.
+
+    Returns:
+    - test_loss: Average loss on the test set.
+    - test_accuracy: Accuracy on the test set.
+    - all_predictions: List of predicted labels.
+    - all_true_labels: List of true labels.
+    """
+    if device is None:
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+    model.to(device)
+    model.eval()
+
+    test_loss = 0.0
+    correct = 0
+    total = 0
+    all_predictions = []
+    all_true_labels = []
+
+    with torch.no_grad():
+        for batch in tqdm(test_loader, desc="Testing"):
+            inputs = batch['image'].to(device)
+            labels = batch['label'].to(device)
+            outputs = model(inputs)
+            loss = criterion(outputs, labels)
+            test_loss += loss.item()
+
+            _, predicted = torch.max(outputs, 1)
+            correct += (predicted == labels).sum().item()
+            total += labels.size(0)
+
+            all_predictions.extend(predicted.cpu().numpy())
+            all_true_labels.extend(labels.cpu().numpy())
+
+    test_accuracy = correct / total
+    avg_test_loss = test_loss / len(test_loader)
+
+    print(f"Test Loss: {avg_test_loss:.4f}, Test Accuracy: {test_accuracy:.4f}")
+
+    return avg_test_loss, test_accuracy, all_predictions, all_true_labels
+
+if __name__ == "__main__":
+    # Example usage
+    pass

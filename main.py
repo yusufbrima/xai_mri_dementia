@@ -38,6 +38,15 @@ if __name__ == "__main__":
     
     print(f"Number of classes: {num_classes}")
 
+    for i, (inputs, labels) in enumerate(train_loader):
+        print(f"Batch {i+1}:")
+        print(f"Inputs shape: {inputs['image'].shape}")
+        print(f"Labels shape: {labels['label'].shape}")
+        if i == 1:
+            break
+    # Example of how to use the dataloaders
     
+
+
 
     
