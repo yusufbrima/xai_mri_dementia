@@ -1,0 +1,105 @@
+# ===========================================================================================
+# Author:        Yusuf Brima                                                                #
+# Project:       Explainable Deep Learning for Dementia Diagnosis                           #
+# Description:   Configuration file for setting up the MRI dataset and model parameters     #
+# ===========================================================================================
+
+# This configuration file is designed to be flexible and easy to modify.
+# It allows for quick adjustments to the dataset, model architecture, training parameters,
+# and explainability methods. The goal is to facilitate rapid experimentation and iteration
+# while maintaining a clear structure for the project.
+# The configuration is divided into sections for project settings, data handling,
+# model architecture, training parameters, explainability methods, logging, and output settings.
+# Each section contains relevant parameters that can be easily modified to suit the needs of the project.
+# The initial settings are designed for a lightweight model and dataset to allow for quick iterations.
+# As the project progresses, these settings can be adjusted for more complex models and larger datasets.
+project:
+  name: explainable_mri_dementia
+  seed: 42
+  device: cuda  # Use 'cuda' for GPU acceleration, or 'cpu' for CPU
+
+data:
+  root_dir: /net/projects/scratch/winter/valid_until_31_July_2025/ybrima/datasets/ADNI_t1linear_graymatter/
+  modality: MRI
+  image_size: null #[128, 128, 128] #null  # For X,Y,Z. Ensure this is compatible with your dataset. Set to null if not needed.
+  normalization: minmax # Standard normalization for MRI data [0,1] 
+  split_ratios: [0.8, 0.10, 0.10]  # Training, validation, testing split
+  stratify: true  # Stratify splits based on class distribution
+  drop_na: true  # Drop samples with NaN values
+  filter_class_values: [] #['LMCI']  # Filter classes to exclude from the dataset leave empty if not needed
+  augmentations:
+    - flip  # Basic augmentation
+    - rotate  # Basic rotation 10 deg
+    - resize # +- 10%
+  num_workers: 4
+  batch_size: 2
+  shuffle: true  # Shuffle data for training
+  annotations_file_format: 'xlsx'  # Options: 'csv' or 'xlsx' or 'xls' If the file is xlsx or xls, it uses the first sheet (that is index 0)
+  dataset_name: 'ADNI'  # Name of the dataset for logging
+  annotations_file: 'class_file_mapping.xlsx'  # Path to annotation if annotations_file_format is 'csv'
+  class_column: 'class_name'  # Column in CSV with class labels
+  filename_column: 'relative_path'  # Column in CSV with filenames
+  perform_slicing: true  # Set to true if you want to slice the 3D images such that the first n and last m frames are not used
+  skip_start_frames: 10  # Number of frames to skip at the beginning
+  skip_end_frames: 10    # Number of frames to skip at the end # implement for X Y Z dims
+  skip_x_start_frames: 10  # Number of frames to skip at the beginning
+  skip_x_end_frames: 10    # Number of frames to skip at the end
+  skip_y_start_frames: 10  # Number of frames to skip at the beginning
+  skip_y_end_frames: 10    # Number of frames to skip at the end
+  skip_z_start_frames: 10  # Number of frames to skip at the beginning
+  skip_z_end_frames: 10    # Number of frames to skip at the end
+
+model:
+  architecture: 3d_resnet
+  pretrained: false  # Start without pretrained weights for now
+  num_classes: 3  # Adjust based on your classification task
+  input_channels: 1  # Single channel for MRI
+  dropout: 0.3  # Can be adjusted later for regularization
+  backbone: resnet18  # Lightweight backbone for fast iteration
+
+training:
+  epochs: 20  # Lower epoch count for the initial iteration
+  batch_size: 2
+  optimizer:
+    type: Adam
+    lr: 0.001
+    weight_decay: 1e-5
+  scheduler:
+    type: StepLR
+    step_size: 10
+    gamma: 0.1
+  loss: CrossEntropyLoss  # Standard loss function for classification
+  metrics:
+    - accuracy
+    - auc  # For binary classification, accuracy and AUC are key metrics
+
+logging:
+  experiment_id: 1  # Unique ID for the experiment
+  checkpoint_freq: 5  # Save checkpoints every 5 epochs
+  use_tensorboard: true  # Enable TensorBoard for visualization
+  experiment_name: "results/exp_{experiment_id}_{date}"  # Base name without path prefix
+  output_base_dir: "${experiment_name}"  # Dynamic base directory for all outputs
+  log_dir: "logs/"
+  checkpoint_dir: "checkpoints/"
+
+explainability:
+  method: gradcam  # Start with Grad-CAM for visual explainability
+  save_maps: true  # Save Grad-CAM maps for later inspection
+  output_dir: "${output_base_dir}/explanations/"  # Dynamic output directory
+  layers: ["conv3", "conv4"]  # Focus on convolutional layers for Grad-CAM
+
+output:
+  save_predictions: true  # Save model predictions
+  save_probabilities: true  # Save predicted probabilities for each class
+  save_visualizations: true  # Save Grad-CAM visualizations
+  visualization_format: png  # Format for saved visualizations
+  output_dir: "${output_base_dir}/predictions/"  # Dynamic output directory
+
+misc:
+  num_trials: 1  # Keep the number of trials low initially
+  resume_training: false  # No need to resume training in the first iteration
+  debug_mode: false  # Disable debug mode unless debugging specific issues
+  figure_dir: "${output_base_dir}/figures/"  # Dynamic figure directory
+  figure_dpi: 300  # Save figures with high resolution
+  figure_format: png  # Format for saved figures
+  save_model: true  # Save the final model
