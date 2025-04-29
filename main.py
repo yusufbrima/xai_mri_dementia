@@ -38,17 +38,6 @@ if __name__ == "__main__":
     
     print(f"Number of classes: {num_classes}")
 
-    # iterate through the train dataloader
-    i = 0
-    for batch in train_loader:
-        images, labels = batch['image'], batch['label']
-        print(f"Batch size: {images.shape[0]}")
-        print(f"Image shape: {images.shape}")
-        print(f"Label shape: {labels.shape}")
-        print("Sample satistics", images[0].min(), images[0].max(), images[0].mean())
-        if i == 1:
-            break
-        i += 1
-    print("Dataloaders created successfully!")
+    
 
     
