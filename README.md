@@ -51,12 +51,12 @@ It’s recommended to create and activate a dedicated Conda environment before p
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-org/explainable-mri-dementia.git
-cd explainable-mri-dementia
+git clone https://github.com/yusufbrima/xai_mri_dementia.git
+cd xai_mri_dementia
 
 # Create and activate a Conda environment
-conda create -n mri-dementia python=3.12 -y
-conda activate mri-dementia
+conda create -n xai_dementia python=3.12 -y
+conda activate xai_dementia
 
 # Install dependencies
 pip install -r requirements.txt
@@ -66,7 +66,7 @@ pip install -r requirements.txt
 ## Directory Structure
 
 ```text
-explainable-mri-dementia/       # Repo root
+xai_mri_dementia/               # Repo root
 ├── config/                     # Experiment configs (YAML/JSON)
 │   └── base_config.yaml        # Default hyperparams & paths
 ├── data/                       # Preprocessing & dataset code
@@ -163,7 +163,7 @@ explainer: lrp
 
 ## Handoff Notes
 
-- Activate the `mri-dementia` Conda environment before running any scripts.
+- Activate the `xai_dementia` Conda environment before running any scripts.
 - Update `requirements.txt` when adding new dependencies:
   ```bash
   pip freeze > requirements.txt
