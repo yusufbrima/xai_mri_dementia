@@ -1,6 +1,6 @@
-# Explainable MRI Dementia Diagnosis (PyTorch Port)
+Explainable MRI Dementia Diagnosis (PyTorch Port)
 
-A PyTorch-based, end-to-end pipeline for dementia diagnosis from brain MRI scans with explainable AI (XAI) support.
+A PyTorch-based, end-to-end port of the original Keras pipeline ([martindyrba/Experimental](https://github.com/martindyrba/Experimental)) for dementia diagnosis from brain MRI scans with explainable AI (XAI) support.
 
 ---
 
@@ -12,12 +12,13 @@ A PyTorch-based, end-to-end pipeline for dementia diagnosis from brain MRI scans
 4. [Installation](#installation)
 5. [Directory Structure](#directory-structure)
 6. [Getting Started](#getting-started)
-7. [Existing Components](#existing-components)
-8. [Extending the Pipeline](#extending-the-pipeline)
-9. [Configuration](#configuration)
-10. [Logging & Checkpoints](#logging--checkpoints)
-11. [Handoff Notes](#handoff-notes)
-12. [License](#license)
+7. [Examples](#examples)
+8. [Existing Components](#existing-components)
+9. [Extending the Pipeline](#extending-the-pipeline)
+10. [Configuration](#configuration)
+11. [Logging & Checkpoints](#logging--checkpoints)
+12. [Handoff Notes](#handoff-notes)
+13. [License](#license)
 
 ---
 
@@ -25,18 +26,20 @@ A PyTorch-based, end-to-end pipeline for dementia diagnosis from brain MRI scans
 
 For a detailed system design and specification, see the [project overview PDF](docs/explainable_ai_mri_dementia.pdf).
 
-This repository ports an existing Keras-based dementia diagnosis pipeline to PyTorch, emphasizing modularity, reproducible experiments, and interpretability via XAI methods (e.g., Grad-CAM, LRP).
-
-This repository ports an existing Keras-based dementia diagnosis pipeline to PyTorch, emphasizing modularity, reproducible experiments, and interpretability via XAI methods (e.g., Grad-CAM, LRP).
-
+This repository ports an existing Keras-based dementia diagnosis pipeline to PyTorch, focusing on modularity, reproducible experiments, and interpretability via XAI methods (e.g., Grad-CAM, LRP).
 
 ## Features (Implemented)
 
-- **Data Preprocessing & Loader**: NIfTI-based MRI preprocessing and dataset splits (`train`/`val`/`test`).
-- **Model Definitions**: Three 3D CNN architectures already implemented under `models/`.
-- **Training Utilities**: `train` function with support for configurable loss, optimizer, and metrics.
-- **Model Persistence**: `save_model` and `load_model` functions for checkpointing and resume.
-
+- **YAML Configuration**: Base experiment configuration (`config/base_config.yaml`) fully supported.
+- **Data Preprocessing & Loader**: NIfTI-based MRI preprocessing, augmentations, and dataset splits (`train`/`val`/`test`) implemented in `data/nifti_loader.py` and `data/transforms.py`.
+- **Initial 3D CNN Models**: Simple3DCNN and ResNet3D architectures provided under `models/` as inspiration and reference.
+- **Training Utilities**:
+  - `train_model(...)` in `training/trainer.py` for end-to-end classification (TODO: intermediate checkpointing).
+  - `test_model(...)` for evaluation of trained models on test splits.
+- **Model Persistence**:
+  - `save_model()` and `load_model()` helpers for saving/loading weights and optimizer state.
+- **CLI Interface**: `main.py` entrypoint supporting default config, custom config files, and command-line overrides for batch size, epochs, and other parameters.
+- **Starter Notebook**: `examples/Starter.ipynb` demonstrating data loading, config overrides, data iteration, slice plotting, and full training workflow.
 
 ## Prerequisites
 
@@ -45,7 +48,6 @@ This repository ports an existing Keras-based dementia diagnosis pipeline to PyT
 - CUDA Toolkit ≥ 12.6 (optional, for GPU acceleration)
 
 It’s recommended to create and activate a dedicated Conda environment before proceeding.
-
 
 ## Installation
 
@@ -62,46 +64,42 @@ conda activate xai_dementia
 pip install -r requirements.txt
 ```
 
-
 ## Directory Structure
 
 ```text
-xai_mri_dementia/               # Repo root
-├── config/                     # Experiment configs (YAML/JSON)
-│   └── base_config.yaml        # Default hyperparams & paths
-├── data/                       # Preprocessing & dataset code
-│   ├── transforms.py           # Image transforms & augmentations
-│   ├── nifti_loader.py         # NIfTI MRI loader
-│   └── dataset_factory.py      # Builds Train/Val/Test datasets
-├── models/                     # Neural network architectures
-│   ├── base_model.py           # Abstract base class
-│   ├── cnn_backbones.py        # 3D CNN variants
-│   └── model_factory.py        # Instantiate models via config
-├── explainers/                 # XAI methods (e.g., LRP, Saliency)
-│   ├── lrp.py
-│   ├── vanilla.py
-│   └── explainer_factory.py
-├── training/                   # Training & evaluation logic
-│   ├── trainer.py              # Main training loop
-│   ├── losses.py
-│   └── metrics.py
-├── utils/                      # Utility functions
-│   ├── logger.py               # Experiment logging
-│   ├── visualization.py        # Plotting and result visualization
-│   └── nifti_utils.py          # Helpers for NIfTI IO
-├── scripts/                    # CLI entrypoints
-│   └── train.py                # Launch training from command line
-├── results/                    # Experiment outputs (logs, plots, checkpoints)
-│   └── exp_<n>/
-├── tests/                      # (Removed – unit tests not in use)
-├── requirements.txt
-└── README.md
-```  
-
+explainable_mri_dementia/               # Repo root
+├── config/                            # YAML configs and experiment initialization
+│   ├── base_config.yaml               # Default hyperparameters & paths
+│   └── base_loader.py                 # Config loader and experiment directory setup
+├── data/                              # Data loading & preprocessing
+│   ├── transforms.py                  # Image transformations & augmentations
+│   └── nifti_loader.py                # NIfTI MRI file loader
+├── models/                            # Neural network architectures
+│   └── cnn_backbones.py               # Simple3DCNN & ResNet3D variants
+├── explainers/                        # XAI methods for interpretability
+│   ├── lrp.py                         # Layer-wise Relevance Propagation
+│   └── vanilla.py                     # Vanilla gradient saliency maps
+├── training/                          # Training and evaluation logic
+│   ├── trainer.py                     # Main training loop (`train_model`, `test_model`)
+│   ├── losses.py                      # Custom loss functions
+│   └── metrics.py                     # Evaluation metrics
+├── utils/                             # Miscellaneous utilities
+│   ├── logger.py                      # Logging utilities
+│   ├── visualization.py               # Plotting results and saliency maps
+│   └── utils.py                       # General helper functions
+├── examples/                          # Example notebooks and demos
+│   └── Starter.ipynb                  # Quickstart notebook
+├── results/                           # Experiment outputs
+│   ├── exp_01/                        # Outputs for experiment 01
+│   └── exp_02/                        # Outputs for experiment 02
+├── main.py                            # Entry point for CLI usage
+├── requirements.txt                   # Python dependencies
+└── README.md                          # Overview and usage instructions
+```
 
 ## Getting Started
 
-### Quick Training Example
+### Quick Training via CLI
 
 ```bash
 python scripts/train.py \
@@ -110,41 +108,60 @@ python scripts/train.py \
 ```
 
 This will:
-1. Load MRI data via `data/dataset_factory.py`.
-2. Initialize the model (one of the three provided) via `models/model_factory.py`.
-3. Execute training loop in `training/trainer.py`.
-4. Save checkpoints & logs under `results/exp01/`.
+1. Load MRI data via `data/nifti_loader.py`.
+2. Initialize your chosen model via `models/cnn_backbones.py`.
+3. Execute the training loop in `training/trainer.py`.
+4. Save metrics, checkpoints, and logs under `results/exp01/` including the current date (DDMMYYYY) affixed to it.
 
+## Usage Examples
+
+1. **Run with default config:**  
+   `python main.py`
+2. **Specify a custom config file:**  
+   `python main.py -c config/base_config.yaml`
+3. **Override batch size and epochs:**  
+   `python main.py --batch-size 16 --epochs 5`
+4. **Use generic overrides:**  
+   `python main.py -o data.batch_size=32 -o training.epochs=3`
+5. **Combine both:**  
+   `python main.py -c config/base_config.yaml --batch-size 8 -o training.lr=1e-4`
+
+## Examples## Examples
+
+Launch the starter notebook for interactive exploration:
+
+```bash
+jupyter notebook examples/Starter.ipynb
+```
+
+The notebook covers:
+- Loading default and overridden configs.
+- Building and iterating data loaders.
+- Visualizing MRI slices and transforms.
+- Running the training and evaluation pipeline.
 
 ## Existing Components
 
-- **Data Loader**: `data/nifti_loader.py` and `data/transforms.py` handle raw NIfTI files and augmentations.
-- **Models**: Three 3D CNNs (`models/cnn_backbones.py`), abstracted by `BaseModel` and assembled in `model_factory.py`.
-- **Train / Save / Load**:
-  - `training/trainer.py`: core training logic with loss, optimizer configuration.
-  - `utils/logger.py`: logging of metrics and checkpoints.
-  - `models/base_model.py`: includes `save_model` & `load_model` methods.
-
+- **Data Loader**: Complete NIfTI handling and splits (`data/nifti_loader.py`, `data/transforms.py`).
+- **Models**: Simple3DCNN & ResNet3D in `models/cnn_backbones.py`.
+- **Training & Evaluation**:
+  - `train_model(...)` & `test_model(...)` in `training/trainer.py`.
+  - `save_model()` / `load_model()` in `models/base_model.py` and `utils/logger.py`.
 
 ## Extending the Pipeline
 
 ### Adding a New Model
-1. Define your model class in `models/` (e.g., `custom_model.py`), subclassing `BaseModel`.
-2. Register it in `models/model_factory.py` with a unique name.
-3. Add a corresponding entry under `model_name` in your config file.
+1. Subclass `nn.Module` in `models/cnn_backbones.py`.
+2. Add entry under `model_name` in your YAML config.
 
 ### Implementing a New XAI Method
-1. Create a new script under `explainers/` (e.g., `gradcam.py`).
-2. Add a factory entry in `explainer_factory.py`.
-3. Invoke via CLI or notebook, ensuring correct `model` and `data` inputs.
-
+1. Create script in `explainers/` (e.g., `gradcam.py`).
+2. Invoke via CLI or notebook with correct `--explainer` flag.
 
 ## Configuration
 
-All hyperparameters, paths, and component choices live in YAML/JSON under `config/`.  
-Modify `base_config.yaml` or create new ones, then pass via `--config` flag.
+All settings for hyperparameters, paths, and components live in `config/base_config.yaml`. Override defaults by passing additional flags or custom config files:
 
-Example fields:
 ```yaml
 model_name: resnet3d
 batch_size: 8
@@ -153,24 +170,21 @@ data_root: /path/to/nifti/
 explainer: lrp
 ```
 
-
 ## Logging & Checkpoints
 
-- Logs (e.g., training & validation metrics) are saved in `<results>/logs/`.
-- Model weights and optimizer state are checkpointed via `save_model` in `<results>/checkpoints/`.
-- Resume training by pointing `load_model` to an existing checkpoint in your config.
-
+- Metrics and logs: `results/<exp>/logs/`.
+- Checkpoints (model & optimizer state): `results/<exp>/checkpoints/` via `save_model()`.
+- To evaluate on test split, use `test_model()` which outputs test metrics and optionally save results.
 
 ## Handoff Notes
 
-- Activate the `xai_dementia` Conda environment before running any scripts.
-- Update `requirements.txt` when adding new dependencies:
+- Activate `xai_dementia` environment before running any scripts.
+- After adding new dependencies, update `requirements.txt`:
   ```bash
   pip freeze > requirements.txt
   ```
-- Use descriptive experiment names to avoid overwriting previous runs.
-- For any missing functionality (e.g., additional explainers), follow the existing factory patterns.
-
+- Use descriptive experiment names to avoid overwriting previous results.
+- Refer to `examples/Starter.ipynb` for usage patterns.
 
 ## License
 

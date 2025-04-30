@@ -1,8 +1,5 @@
-# ===========================================================================================
-# Author:        Yusuf Brima                                                                #
 # Project:       Explainable Deep Learning for Dementia Diagnosis                           #
 # Description:   Configuration file for setting up the MRI dataset and model parameters     #
-# ===========================================================================================
 
 # This configuration file is designed to be flexible and easy to modify.
 # It allows for quick adjustments to the dataset, model architecture, training parameters,

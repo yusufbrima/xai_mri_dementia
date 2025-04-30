@@ -1,8 +1,15 @@
 import torch
 import numpy as np
+import pandas as pd
+from tqdm import tqdm
 import random
 from data.nifti_loader import MedicalImageDatasetSplitter,MonaiDatasetCreator,MonaiDataLoaderManager
+import matplotlib.pyplot as plt
 from config import config_loader
+import torch.nn as nn
+from models.cnn_backbones import Small3DCNN,DenseNet3D,ResNet3D,BasicBlock3D
+from training.trainer import train_model,test_model
+
 # Set random seed for reproducibility
 np.random.seed(42)
 torch.manual_seed(42)
@@ -14,6 +21,12 @@ if __name__ == "__main__":
 
     # Load & process config (creates directories once)
     config = config_loader.load_config(config_path)
+
+
+    config['data']['batch_size']      = 8
+    config['data']['perform_slicing'] = False
+    config['data']['image_size'] = [128, 128, 128]
+    config['training']['epochs'] = 2
     
     # Create dataset splitter
     dataset_splitter = MedicalImageDatasetSplitter(config)
@@ -34,17 +47,47 @@ if __name__ == "__main__":
     
     # Get class information
     class_to_idx, idx_to_class = dataset_splitter.get_class_info()
-    num_classes = dataset_splitter.get_num_classes()
-    
-    print(f"Number of classes: {num_classes}")
+    NUM_CLASSES = dataset_splitter.get_num_classes()
 
-    for i, (inputs, labels) in enumerate(train_loader):
-        print(f"Batch {i+1}:")
-        print(f"Inputs shape: {inputs['image'].shape}")
-        print(f"Labels shape: {labels['label'].shape}")
-        if i == 1:
-            break
-    # Example of how to use the dataloaders
+
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    model = Small3DCNN(num_classes=NUM_CLASSES).to(device)
+
+    criterion = nn.CrossEntropyLoss()
+    optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
+
+
+
+    # Train the model on the available device (either GPU or CPU)
+    trained_model, history = train_model(
+        model=model,
+        train_loader=train_loader,
+        val_loader=val_loader,
+        criterion=criterion,
+        optimizer=optimizer,
+        num_epochs=config['training']['epochs'],
+        device=device
+    )
+
+    # Accessing the training history
+    print("Training History:")
+    print(f"Train Loss: {history['train_loss']}")
+    print(f"Train Accuracy: {history['train_accuracy']}")
+    print(f"Validation Loss: {history['val_loss']}")
+    print(f"Validation Accuracy: {history['val_accuracy']}")
+
+
+    test_loss, test_acc, preds, labels = test_model(trained_model, test_loader, criterion)
+
+
+
+
+
+
+
+
+
+
     
 
 
