@@ -224,7 +224,7 @@ class MedicalImageDatasetSplitter:
         
         # Set up paths and column names from config
         self.base_dir = Path(self.config['data']['root_dir'])
-        self.file_path  = self.base_dir / self.config['data']['annotations_file']
+        self.file_path  = Path(self.config['data']['annotations_file'])
         self.class_column = self.config['data']['class_column']
         self.filename_column = self.config['data']['filename_column']
         self.value_to_filter =  self.config['data'].get('filter_class_values', [])
