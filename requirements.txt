@@ -6,3 +6,4 @@ PyYAML==6.0.2
 scikit_learn==1.6.1
 torch
 tqdm==4.67.1
+click
