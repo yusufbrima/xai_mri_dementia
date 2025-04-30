@@ -16,7 +16,7 @@ project:
   device: cuda  # Use 'cuda' for GPU acceleration, or 'cpu' for CPU
 
 data:
-  root_dir: /net/projects/scratch/winter/valid_until_31_July_2025/ybrima/datasets/ADNI_t1linear_graymatter/
+  root_dir: /full/path/to/your/nifti/directory/
   modality: MRI
   image_size: null #[128, 128, 128] #null  # For X,Y,Z. Ensure this is compatible with your dataset. Set to null if not needed.
   normalization: minmax # Standard normalization for MRI data [0,1] 
@@ -33,7 +33,7 @@ data:
   shuffle: true  # Shuffle data for training
   annotations_file_format: 'xlsx'  # Options: 'csv' or 'xlsx' or 'xls' If the file is xlsx or xls, it uses the first sheet (that is index 0)
   dataset_name: 'ADNI'  # Name of the dataset for logging
-  annotations_file: '/net/projects/scratch/winter/valid_until_31_July_2025/ybrima/datasets/ADNI_t1linear_graymatter/class_file_mapping.xlsx'  # Path to annotation if annotations_file_format is 'csv'
+  annotations_file: '/full/path/to/your/class_file_mapping.xlsx'  # Path to annotation if annotations_file_format is 'csv'
   class_column: 'class_name'  # Column in CSV with class labels
   filename_column: 'relative_path'  # Column in CSV with filenames
   perform_slicing: true  # Set to true if you want to slice the 3D images such that the first n and last m frames are not used
