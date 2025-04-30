@@ -126,7 +126,7 @@ This will:
 5. **Combine both:**  
    `python main.py -c config/base_config.yaml --batch-size 8 -o training.lr=1e-4`
 
-## Examples## Examples
+## Examples
 
 Launch the starter notebook for interactive exploration:
 
